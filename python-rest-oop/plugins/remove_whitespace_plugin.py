@@ -1,9 +1,14 @@
-from plugin_base import BasePlugin
+"""Plugin that removes all whitespace from text."""
+
+from plugin_base import BasePlugin, ensure_text
+
 
 class RemoveWhitespacePlugin(BasePlugin):
-    """Removes whitespace from a string."""
+    """Remove all whitespace characters from text."""
 
-    def run(self, data):
-        if isinstance(data, str):
-            return ''.join(data.split())
-        raise ValueError("Input must be a string")
+    name = "remove-whitespace"
+    description = "Remove spaces, tabs, newlines, and other whitespace."
+
+    def run(self, data: str) -> str:
+        """Return ``data`` with every whitespace character removed."""
+        return "".join(ensure_text(data).split())
