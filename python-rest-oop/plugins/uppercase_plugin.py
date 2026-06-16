@@ -1,9 +1,14 @@
-from plugin_base import BasePlugin
+"""Plugin that converts text to uppercase."""
+
+from plugin_base import BasePlugin, ensure_text
+
 
 class UppercasePlugin(BasePlugin):
-    """Converts text to uppercase."""
+    """Convert text to uppercase."""
 
-    def run(self, data):
-        if isinstance(data, str):
-            return data.upper()
-        raise ValueError("Input must be a string")
+    name = "uppercase"
+    description = "Convert all characters to uppercase."
+
+    def run(self, data: str) -> str:
+        """Return ``data`` converted to uppercase."""
+        return ensure_text(data).upper()

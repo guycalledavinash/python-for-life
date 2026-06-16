@@ -1,10 +1,13 @@
-"""Run the example REST-backed plugin workflow."""
+"""Run text through a configurable plugin workflow."""
 
-from collections.abc import Iterable
+import argparse
+from collections.abc import Iterable, Sequence
 
 from plugin_base import BasePlugin
-from plugins.remove_whitespace_plugin import RemoveWhitespacePlugin
-from plugins.uppercase_plugin import UppercasePlugin
+from plugin_registry import available_plugins, build_plugins
+
+DEFAULT_PLUGINS = ("remove-whitespace", "uppercase")
+DEFAULT_BASE_URL = "https://mockapi.io/demo"
 
 
 def process_data(data: str, plugins: Iterable[BasePlugin]) -> str:
@@ -15,19 +18,65 @@ def process_data(data: str, plugins: Iterable[BasePlugin]) -> str:
     return processed_data
 
 
-def main() -> None:
-    """Fetch data, transform it with the configured plugins, and post the result."""
-    from api_client import MockAPIClient
+def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
+    """Parse command-line arguments for the workflow runner."""
+    registry = available_plugins()
+    parser = argparse.ArgumentParser(
+        description="Run text through a configurable plugin pipeline.",
+    )
+    parser.add_argument(
+        "--text",
+        help="Text to process locally. If omitted, input is fetched from the REST API.",
+    )
+    parser.add_argument(
+        "--base-url",
+        default=DEFAULT_BASE_URL,
+        help=f"REST API base URL used when --text is omitted (default: {DEFAULT_BASE_URL}).",
+    )
+    parser.add_argument(
+        "--plugin",
+        action="append",
+        choices=sorted(registry),
+        dest="plugins",
+        help=(
+            "Plugin to apply, in order. Repeat this option to build a pipeline. "
+            f"Defaults to: {', '.join(DEFAULT_PLUGINS)}."
+        ),
+    )
+    parser.add_argument(
+        "--list-plugins",
+        action="store_true",
+        help="List available plugins and exit.",
+    )
+    return parser.parse_args(argv)
 
-    client = MockAPIClient(base_url="https://mockapi.io/demo")
-    raw_data = client.fetch_data()
-    plugins = [RemoveWhitespacePlugin(), UppercasePlugin()]
 
-    processed_data = process_data(raw_data, plugins)
+def main(argv: Sequence[str] | None = None) -> int:
+    """Fetch or accept text, transform it, optionally post it, and print the result."""
+    args = parse_args(argv)
+    registry = available_plugins()
 
-    client.post_result(processed_data)
+    if args.list_plugins:
+        for name, plugin_class in sorted(registry.items()):
+            print(f"{name}: {plugin_class.description}")
+        return 0
+
+    plugin_names = args.plugins or list(DEFAULT_PLUGINS)
+    plugins = build_plugins(plugin_names)
+
+    if args.text is None:
+        from api_client import MockAPIClient
+
+        client = MockAPIClient(base_url=args.base_url)
+        raw_data = client.fetch_data()
+        processed_data = process_data(raw_data, plugins)
+        client.post_result(processed_data)
+    else:
+        processed_data = process_data(args.text, plugins)
+
     print("Processing complete:", processed_data)
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
