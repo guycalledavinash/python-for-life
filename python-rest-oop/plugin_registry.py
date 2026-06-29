@@ -3,13 +3,21 @@
 from collections.abc import Iterable
 
 from plugin_base import BasePlugin
-from plugins import NormalizeWhitespacePlugin, RemoveWhitespacePlugin, UppercasePlugin
+from plugins import (
+    NormalizeWhitespacePlugin,
+    RemoveWhitespacePlugin,
+    ReversePlugin,
+    SlugifyPlugin,
+    UppercasePlugin,
+)
 
 PluginType = type[BasePlugin]
 
 _BUILT_IN_PLUGINS: tuple[PluginType, ...] = (
     NormalizeWhitespacePlugin,
     RemoveWhitespacePlugin,
+    ReversePlugin,
+    SlugifyPlugin,
     UppercasePlugin,
 )
 
@@ -33,7 +41,8 @@ def build_plugins(names: Iterable[str]) -> list[BasePlugin]:
             plugin_class = registry[name]
         except KeyError as exc:
             options = ", ".join(sorted(registry))
-            raise ValueError(f"Unknown plugin '{name}'. Available plugins: {options}") from exc
+            message = f"Unknown plugin '{name}'. Available plugins: {options}"
+            raise ValueError(message) from exc
         plugins.append(plugin_class())
 
     return plugins

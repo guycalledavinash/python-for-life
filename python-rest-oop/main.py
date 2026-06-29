@@ -31,7 +31,10 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--base-url",
         default=DEFAULT_BASE_URL,
-        help=f"REST API base URL used when --text is omitted (default: {DEFAULT_BASE_URL}).",
+        help=(
+            "REST API base URL used when --text is omitted "
+            f"(default: {DEFAULT_BASE_URL})."
+        ),
     )
     parser.add_argument(
         "--plugin",
@@ -48,6 +51,11 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         action="store_true",
         help="List available plugins and exit.",
     )
+    parser.add_argument(
+        "--show-pipeline",
+        action="store_true",
+        help="Print the selected plugin pipeline before processing.",
+    )
     return parser.parse_args(argv)
 
 
@@ -63,6 +71,9 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     plugin_names = args.plugins or list(DEFAULT_PLUGINS)
     plugins = build_plugins(plugin_names)
+
+    if args.show_pipeline:
+        print("Pipeline:", " -> ".join(plugin.name for plugin in plugins))
 
     if args.text is None:
         from api_client import MockAPIClient
