@@ -5,10 +5,10 @@ A compact, testable plugin framework for text-oriented data workflows. It shows 
 ## What is included
 
 - A typed `BasePlugin` abstraction for all transformations
-- Built-in plugins for uppercasing, removing whitespace, and normalizing whitespace
+- Built-in plugins for uppercasing, reversing, slugifying, removing whitespace, and normalizing whitespace
 - A registry that builds plugin pipelines from friendly names
-- A command-line runner for local text processing or REST-backed workflows
-- A small REST client with timeouts and response validation
+- A command-line runner for local text processing, pipeline previews, or REST-backed workflows
+- A small REST client with timeouts, response validation, and injectable sessions for tests
 - A pytest suite that covers plugins, pipeline composition, and CLI behavior
 
 ## Project layout
@@ -54,6 +54,14 @@ List available plugins:
 python main.py --list-plugins
 ```
 
+Preview the pipeline before processing:
+
+```bash
+python main.py --text "Python REST + OOP!" --plugin slugify --show-pipeline
+# Pipeline: slugify
+# Processing complete: python-rest-oop
+```
+
 Run the REST-backed demo by omitting `--text`:
 
 ```bash
@@ -64,6 +72,16 @@ The REST mode expects:
 
 - `GET /data` to return JSON with a string `text` field
 - `POST /result` to accept JSON shaped like `{"result": "..."}`
+
+## Built-in plugins
+
+| Name | Description |
+| --- | --- |
+| `normalize-whitespace` | Collapse repeated whitespace and trim leading/trailing spaces. |
+| `remove-whitespace` | Remove spaces, tabs, newlines, and other whitespace. |
+| `reverse` | Reverse the input text. |
+| `slugify` | Convert text to a lowercase URL-friendly slug. |
+| `uppercase` | Convert all characters to uppercase. |
 
 ## Adding a plugin
 
